@@ -8,9 +8,51 @@ import {
 import { getCurrentTimestamp } from "./general";
 import { supabase } from "../supabaseClient";
 
+export async function handleExistingUserSignIn(userData: UserDataType) {
+  try {
+    const currentUser = await getUserSession();
+    if (!currentUser) {
+      throw new Error("Session not found");
+    }
+
+    // if avatar or username has changed, since last sign-in, update accordingly
+    let highResCurrentUserImageUrl = currentUser.twitterAvatarURL.replace(
+      "_normal",
+      "_400x400"
+    );
+    if (
+      userData.twitter_avatar_url !== highResCurrentUserImageUrl ||
+      userData.name !== currentUser.twitterName
+    ) {
+      const { error } = await supabase
+        .from("users")
+        .update({
+          twitter_avatar_url: highResCurrentUserImageUrl,
+          name: currentUser.twitterName,
+        })
+        .eq("user_id", currentUser.userID);
+
+      if (error) {
+        console.error(error);
+      }
+    }
+  } catch (error) {
+    console.error(error);
+    return { success: false, error };
+  }
+  return { success: true };
+}
+
+export async function handleFirstUserSignin() {
+  const userData = await getUserData();
+  if (!userData) {
+    // Confirm valid referral code, claim, and create user
+  }
+}
+
 export async function handleSignIn() {
   // Process handles the full sign-in process for: existing users, new users, unadmitted users
-
+  console.log("attempting sign in");
   let initialSignIn = false;
 
   try {
@@ -23,7 +65,7 @@ export async function handleSignIn() {
 
     // Checking if user exists in 'public.users' + gathering data
     let userData = await getUserData(currentUser.userID);
-
+    console.log({ userData });
     if (!userData) {
       // This block only executes for new users (i.e. no public.users record exists)
       const referralID = localStorage.getItem("referral-code");
@@ -34,7 +76,7 @@ export async function handleSignIn() {
 
       const referral = await getReferralDetails(referralID);
       if (referral.status !== "unclaimed") {
-        throw `This referral is ${referral.status}`;
+        throw `This referral is ${referral.status} - debug`;
       }
 
       const claimResult = await claimReferral(referralID, currentUser.userID);

@@ -2,8 +2,8 @@
 import { getUserSession } from "@/lib/utils/auth";
 import { getUserData } from "@/lib/utils/data";
 import { createContext, useContext, useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
 
-type UserDataType = Database["public"]["Tables"]["users"]["Row"];
 type UserSessionType = {
   accessToken: string;
   userID: string;
@@ -33,17 +33,39 @@ export default function AuthContextProvider({
   async function initializeUser() {
     const session = await getUserSession();
     if (session) {
-      setUserSession(session);
       const userData = await getUserData(session.userID);
       if (userData) {
         setUserData(userData);
       }
+      setUserSession(session);
     }
     setAuthLoading(false);
   }
 
   useEffect(() => {
     initializeUser();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user?.user_metadata) {
+        initializeUser();
+        // const { user_metadata: meta } = session.user;
+
+        // const sessionData = {
+        //   accessToken: session.access_token,
+        //   userID: session.user.id,
+        //   twitterAvatarURL: meta.avatar_url,
+        //   twitterEmail: meta.email,
+        //   twitterName: meta.full_name,
+        //   twitterHandle: meta.preferred_username,
+        //   twitterID: meta.provider_id,
+        // };
+        // setUserSession(sessionData);
+      } else {
+        setUserSession(null);
+      }
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
   return (

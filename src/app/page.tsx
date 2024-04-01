@@ -7,8 +7,13 @@ import HomePageComponent from "../components/home-page-component";
 import { useState } from "react";
 import { getReferralDetails } from "../lib/utils/data";
 import { useRouter } from "next/navigation";
-import { handleSignIn } from "../lib/utils/process";
+import {
+  handleExistingUserSignIn,
+  handleFirstUserSignin,
+  handleSignIn,
+} from "../lib/utils/process";
 import LoadingSpinner from "../components/loading-spinner/loading-spinner";
+import { useAuthContext } from "@/contexts/auth-context";
 
 const Home: NextPage = () => {
   const router = useRouter();
@@ -16,23 +21,27 @@ const Home: NextPage = () => {
   const errorDescription = useSearchParams().get("error_description");
   const [referralDetails, setReferralDetails] = useState<ReferralDetails>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { userData, userSession, authLoading } = useAuthContext();
 
   useEffect(() => {
     async function handlePageLoad() {
       // Check for error query parameter in URL
-      if (
-        errorDescription === "Error getting user email from external provider"
-      ) {
-        alert(
-          "You need to add your email address to your Twitter account. \n\nGo to Twitter -> More -> Settings and Support -> Your account -> Email. \n\nAfter you do this, try again."
-        );
-      } else if (errorDescription) {
-        alert(
-          "You got an error:\n\n" +
-            errorDescription +
-            "\n\nContact @thomasschulzz on Twitter to investigate."
-        );
+      if (errorDescription) {
+        if (
+          errorDescription === "Error getting user email from external provider"
+        ) {
+          alert(
+            "You need to add your email address to your Twitter account. \n\nGo to Twitter -> More -> Settings and Support -> Your account -> Email. \n\nAfter you do this, try again."
+          );
+        } else {
+          alert(
+            "Error:\n" +
+              errorDescription +
+              "\n\nContact @thomasschulzz or @neallseth on Twitter to investigate."
+          );
+        }
       }
+
       if (referralCode) {
         const referral = await getReferralDetails(referralCode);
         if (referral.status === "unclaimed") {
@@ -41,8 +50,26 @@ const Home: NextPage = () => {
           alert(`This referral is ${referral.status}`);
         }
         setReferralDetails(referral);
+        return;
+      }
+
+      if (authLoading) {
+        return;
+      }
+
+      if (userData) {
+        const signinResult = await handleExistingUserSignIn(userData);
+        if (signinResult.success) {
+          router.replace("/directory");
+          return;
+        }
+      }
+
+      if (userSession) {
+        // Attempt first sign-in
+        const signinResult = await handleFirstUserSignin();
       } else {
-        //localStorage.setItem("referral-code", "")
+        // Attempt first sign-in
         setIsLoading(true);
         const signInResult = await handleSignIn();
         console.log(signInResult);
@@ -58,7 +85,7 @@ const Home: NextPage = () => {
       }
     }
     handlePageLoad();
-  }, [errorDescription, referralCode, router]);
+  }, [errorDescription, referralCode, router, userData]);
 
   return (
     <div className={styles.home}>

@@ -41,6 +41,8 @@ declare namespace NodeJS {
   }
 }
 
+type UserDataType = Database["public"]["Tables"]["users"]["Row"];
+
 type SearcherProfilesFilterType = {
   leaseLength?: string;
   housemateCount?: string;

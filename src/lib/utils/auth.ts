@@ -78,6 +78,7 @@ export async function signInWithTwitter() {
     },
   });
   if (error) {
+    console.error(error);
     return { status: "error", message: "failed to authenticate user" };
   }
 }
