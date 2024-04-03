@@ -1,4 +1,5 @@
 "use client";
+import { supabase } from "@/lib/supabaseClient";
 import { getUserSession } from "@/lib/utils/auth";
 import { getUserData } from "@/lib/utils/data";
 import { createContext, useContext, useEffect, useState } from "react";
@@ -44,6 +45,15 @@ export default function AuthContextProvider({
 
   useEffect(() => {
     initializeUser();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        initializeUser();
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   return (

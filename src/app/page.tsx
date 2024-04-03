@@ -9,6 +9,7 @@ import { getReferralDetails } from "../lib/utils/data";
 import { useRouter } from "next/navigation";
 import { handleSignIn } from "../lib/utils/process";
 import LoadingSpinner from "../components/loading-spinner/loading-spinner";
+import { useAuthContext } from "@/contexts/auth-context";
 
 const Home: NextPage = () => {
   const router = useRouter();
@@ -16,7 +17,7 @@ const Home: NextPage = () => {
   const errorDescription = useSearchParams().get("error_description");
   const [referralDetails, setReferralDetails] = useState<ReferralDetails>(null);
   const [isLoading, setIsLoading] = useState(false);
-
+  const { userSession } = useAuthContext();
   useEffect(() => {
     async function handlePageLoad() {
       // Check for error query parameter in URL
@@ -41,8 +42,7 @@ const Home: NextPage = () => {
           alert(`This referral is ${referral.status}`);
         }
         setReferralDetails(referral);
-      } else {
-        //localStorage.setItem("referral-code", "")
+      } else if (userSession) {
         setIsLoading(true);
         const signInResult = await handleSignIn();
         console.log(signInResult);
@@ -58,7 +58,7 @@ const Home: NextPage = () => {
       }
     }
     handlePageLoad();
-  }, [errorDescription, referralCode, router]);
+  }, [errorDescription, referralCode, router, userSession]);
 
   return (
     <div className={styles.home}>
