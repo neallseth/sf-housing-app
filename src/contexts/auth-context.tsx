@@ -47,6 +47,10 @@ export default function AuthContextProvider({
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log("auth state changed!");
+      if (!userSession && session) {
+        setAuthLoading(true);
+      }
       if (session?.user?.user_metadata) {
         initializeUser();
         // const { user_metadata: meta } = session.user;
@@ -63,6 +67,7 @@ export default function AuthContextProvider({
         // setUserSession(sessionData);
       } else {
         setUserSession(null);
+        setUserData(null);
       }
     });
     return () => subscription.unsubscribe();

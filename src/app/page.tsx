@@ -58,34 +58,55 @@ const Home: NextPage = () => {
       }
 
       if (userData) {
+        setIsLoading(true);
+        console.log("signin in existing user");
         const signinResult = await handleExistingUserSignIn(userData);
         if (signinResult.success) {
+          setIsLoading(false);
           router.replace("/directory");
           return;
         }
       }
 
       if (userSession) {
+        setIsLoading(true);
+
         // Attempt first sign-in
         const signinResult = await handleFirstUserSignin();
-      } else {
-        // Attempt first sign-in
-        setIsLoading(true);
-        const signInResult = await handleSignIn();
-        console.log(signInResult);
-        setIsLoading(false);
+        if (signinResult.error) {
+          console.error(signinResult.error);
+          alert(signinResult.error);
+        } else if (signinResult.success) {
+          setIsLoading(false);
 
-        if (signInResult?.status !== "success") {
-          if (signInResult?.status === "error") {
-            alert(signInResult.message);
-          }
+          router.replace("/directory");
           return;
         }
-        router.replace("/directory");
       }
+      // else {
+      //   setIsLoading(true);
+      //   const signInResult = await handleSignIn();
+      //   console.log(signInResult);
+      //   setIsLoading(false);
+
+      //   if (signInResult?.status !== "success") {
+      //     if (signInResult?.status === "error") {
+      //       alert(signInResult.message);
+      //     }
+      //     return;
+      //   }
+      //   router.replace("/directory");
+      // }
     }
     handlePageLoad();
-  }, [errorDescription, referralCode, router, userData]);
+  }, [
+    authLoading,
+    errorDescription,
+    referralCode,
+    router,
+    userData,
+    userSession,
+  ]);
 
   return (
     <div className={styles.home}>

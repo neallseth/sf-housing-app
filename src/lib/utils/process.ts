@@ -44,10 +44,58 @@ export async function handleExistingUserSignIn(userData: UserDataType) {
 }
 
 export async function handleFirstUserSignin() {
-  const userData = await getUserData();
-  if (!userData) {
-    // Confirm valid referral code, claim, and create user
+  try {
+    const currentUser = await getUserSession();
+    if (!currentUser) {
+      throw new Error("Failed to find user session");
+    }
+
+    const userData = await getUserData(); // Ensuring this is indeed the user's first sign-in (if userData is truthy, it isn't)
+    if (userData) {
+      console.log("Existing user account found - attempting signin");
+      const existingSignInResult = await handleExistingUserSignIn(userData);
+      if (!existingSignInResult.success) {
+        throw new Error("Failed to sign in existing user");
+      }
+    }
+
+    if (!userData) {
+      // First signin attempt. Confirm valid referral code, claim, and create user
+      const referralID = localStorage.getItem("referral-code");
+      if (!referralID) {
+        // New user attempting to sign in without a referral code
+        throw new Error("Referral required");
+      }
+
+      const referral = await getReferralDetails(referralID);
+      if (referral.status !== "unclaimed") {
+        throw `This referral is ${referral.status} - debug`;
+      }
+
+      const claimResult = await claimReferral(referralID, currentUser.userID);
+      if (claimResult.status !== "success") {
+        throw "Failed to claim referral";
+      }
+
+      const twitterImageUrl = currentUser.twitterAvatarURL;
+      let higherResImageUrl = twitterImageUrl.replace("_normal", "_400x400");
+      // At this point, we have successfully claimed a referral for a user. Add them to 'public.users'
+      const createdUserData = await createUser({
+        user_id: currentUser.userID,
+        email: currentUser.twitterEmail,
+        twitter_id: currentUser.twitterID,
+        name: currentUser.twitterName,
+        twitter_avatar_url: higherResImageUrl,
+        twitter_handle: currentUser.twitterHandle,
+      });
+      if (!createdUserData) {
+        throw "Failed to create new user";
+      }
+    }
+  } catch (error) {
+    return { success: false, error };
   }
+  return { success: true };
 }
 
 export async function handleSignIn() {
