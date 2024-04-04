@@ -1,7 +1,7 @@
 "use client";
 import styles from "./page.module.css";
 import { NextPage } from "next";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import HomePageComponent from "../components/home-page-component";
 import { useState } from "react";
@@ -18,6 +18,11 @@ const Home: NextPage = () => {
   const [referralDetails, setReferralDetails] = useState<ReferralDetails>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { userSession } = useAuthContext();
+
+  useEffect(() => {
+    console.log("component mounted");
+  }, []);
+
   useEffect(() => {
     async function handlePageLoad() {
       // Check for error query parameter in URL
@@ -43,18 +48,17 @@ const Home: NextPage = () => {
         }
         setReferralDetails(referral);
       } else if (userSession) {
+        console.log("session exists!");
         setIsLoading(true);
-        const signInResult = await handleSignIn();
+        const signInResult = await handleSignIn(userSession);
         console.log(signInResult);
         setIsLoading(false);
 
-        if (signInResult?.status !== "success") {
-          if (signInResult?.status === "error") {
-            alert(signInResult.message);
-          }
-          return;
+        if (signInResult.success) {
+          router.replace("/directory");
+        } else {
+          alert(signInResult.error);
         }
-        router.replace("/directory");
       }
     }
     handlePageLoad();

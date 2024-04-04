@@ -7,23 +7,20 @@ import {
 } from "./data";
 import { getCurrentTimestamp } from "./general";
 import { supabase } from "../supabaseClient";
+import { UserSessionType, useAuthContext } from "@/contexts/auth-context";
 
-export async function handleSignIn() {
+export async function handleSignIn(currentUser: UserSessionType) {
   // Process handles the full sign-in process for: existing users, new users, unadmitted users
-
-  let initialSignIn = false;
-
   try {
-    const currentUser = await getUserSession();
-    if (!currentUser) {
-      // User doesn't have an active session, meaning they haven't authenticated with Twitter yet
-      console.log("No session found");
-      return;
-    }
+    // if (!currentUser) {
+    //   // User doesn't have an active session, meaning they haven't authenticated with Twitter yet
+    //   console.error("No session found");
+    //   throw new Error("No session found");
+    // }
 
     // Checking if user exists in 'public.users' + gathering data
     let userData = await getUserData(currentUser.userID);
-
+    console.log({ userData });
     if (!userData) {
       // This block only executes for new users (i.e. no public.users record exists)
       const referralID = localStorage.getItem("referral-code");
@@ -56,8 +53,6 @@ export async function handleSignIn() {
       if (!userData) {
         throw "Failed to create new user";
       }
-
-      initialSignIn = true;
     } else {
       // if avatar or username has changed, since last sign-in, update accordingly
 
@@ -82,19 +77,12 @@ export async function handleSignIn() {
         }
       }
     }
-
-    // await refreshTwitterFollowsIfNeeded(
-    //   userData,
-    //   24 * 30,
-    //   currentUser.accessToken
-    // );
   } catch (err) {
-    return { status: "error", message: err };
+    return { success: false, error: err };
   }
 
   return {
-    status: "success",
-    message: initialSignIn ? "initial sign in" : null,
+    success: true,
   };
 }
 

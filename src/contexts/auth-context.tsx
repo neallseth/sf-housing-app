@@ -5,7 +5,7 @@ import { getUserData } from "@/lib/utils/data";
 import { createContext, useContext, useEffect, useState } from "react";
 
 type UserDataType = Database["public"]["Tables"]["users"]["Row"];
-type UserSessionType = {
+export type UserSessionType = {
   accessToken: string;
   userID: string;
   twitterAvatarURL: any;
