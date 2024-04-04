@@ -8,16 +8,11 @@ import {
 import { getCurrentTimestamp } from "./general";
 import { supabase } from "../supabaseClient";
 import { UserSessionType, useAuthContext } from "@/contexts/auth-context";
+import router from "next/router";
 
 export async function handleSignIn(currentUser: UserSessionType) {
   // Process handles the full sign-in process for: existing users, new users, unadmitted users
   try {
-    // if (!currentUser) {
-    //   // User doesn't have an active session, meaning they haven't authenticated with Twitter yet
-    //   console.error("No session found");
-    //   throw new Error("No session found");
-    // }
-
     // Checking if user exists in 'public.users' + gathering data
     let userData = await getUserData(currentUser.userID);
     console.log({ userData });
@@ -80,9 +75,11 @@ export async function handleSignIn(currentUser: UserSessionType) {
   } catch (err) {
     return { success: false, error: err };
   }
+  router.replace("/directory");
 
   return {
     success: true,
+    error: null,
   };
 }
 

@@ -50,19 +50,16 @@ const Home: NextPage = () => {
       } else if (userSession) {
         console.log("session exists!");
         setIsLoading(true);
-        const signInResult = await handleSignIn(userSession);
-        console.log(signInResult);
+        const { error: signInError } = await handleSignIn(userSession);
         setIsLoading(false);
 
-        if (signInResult.success) {
-          router.replace("/directory");
-        } else {
-          alert(signInResult.error);
+        if (signInError) {
+          alert(signInError);
         }
       }
     }
     handlePageLoad();
-  }, [errorDescription, referralCode, router, userSession]);
+  }, [errorDescription, referralCode, userSession]);
 
   return (
     <div className={styles.home}>
