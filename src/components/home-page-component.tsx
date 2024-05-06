@@ -12,6 +12,7 @@ import Link from "next/link";
 import React from "react";
 import { signInWithTwitter } from "../lib/utils/auth";
 import { differenceInDays } from "date-fns";
+import { BackgroundGradient } from "./ui/background-gradient";
 
 type HomePageComponentProps = {
   referralDetails: ReferralDetails;
@@ -157,7 +158,7 @@ const HomePageComponent: NextPage<HomePageComponentProps> = ({
           The SF housing directory of people you probably know
         </p>
         {renderContent()}
-        <div className={styles.membersBox}>
+        <BackgroundGradient className="flex rounded-[22px] max-w-md p-4 bg-white dark:bg-zinc-900">
           <div className={styles.generalWords}>
             <span className={styles.boldAndColored}>{numberOfUsers}</span>{" "}
             members of DirectorySF
@@ -166,7 +167,7 @@ const HomePageComponent: NextPage<HomePageComponentProps> = ({
             <span className={styles.boldAndColored}>{totalWeeklyProfiles}</span>{" "}
             listings posted this month 🔥
           </div>
-        </div>
+        </BackgroundGradient>
       </div>
       <div className="absolute pointer-events-none inset-0 flex items-center justify-center dark:bg-black bg-white [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]"></div>
     </div>
